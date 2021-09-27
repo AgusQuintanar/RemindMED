@@ -21,7 +21,7 @@ app.use(fileUpload());
 
 cron.schedule("* * * * *", function () {
 	console.log("rSending alerts");
-    sendSMSAlerts(60000000);
+    sendSMSAlerts(60);
 });
 
 
