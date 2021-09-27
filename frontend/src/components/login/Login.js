@@ -218,7 +218,7 @@ function Login(props) {
                                                         console.log(user);
 
 														props.saveUserSession(
-															"1234",
+															user.uid,
 															true
 														);
 														props.setAuth(true);

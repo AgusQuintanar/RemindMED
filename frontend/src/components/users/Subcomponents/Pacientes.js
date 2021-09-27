@@ -6,8 +6,10 @@ import ModalBorrarUsuario from "./ModalBorrarUsuario";
 import ModalBorrarUsuarioCon from "./ModalBorrarUsuarioCon";
 import api from "../../shared_components/APIConfig";
 
-async function fetchUsers() {
-	var response = await fetch(api.url + "/usuarios", {
+async function fetchUsers(doctorId) {
+	console.log("doctor id", doctorId);
+
+	var response = await fetch(api.url + "/getPacientes?doctorId=" + doctorId, {
 		method: "get",
 		headers: { "Content-Type": "application/json" },
 	});
@@ -15,24 +17,14 @@ async function fetchUsers() {
 	if (response.status !== 200) return [];
 	var users = await response.json();
 
-	users.forEach((user) => {
-		var foto = null;
-		if (user.Foto) {
-			var buffer = Buffer.from(user.Foto.data);
-			foto = buffer.toString("utf8");
-		}
-		user.Foto = foto;
-	});
-
 	return users;
 }
 
 async function deleteUser(userID, removeUser) {
 	console.log("userID", userID);
-	var response = await fetch(api.url + "/eliminarUsuario", {
-		method: "post",
+	var response = await fetch(api.url + "/deletePaciente?id="+userID, {
+		method: "delete",
 		headers: { "Content-Type": "application/json" },
-		body: JSON.stringify({ ID_Usuario: userID }),
 	});
 
 	if (response.status !== 200) return false;
@@ -59,7 +51,7 @@ function Pacientes(props) {
 
 	useEffect(() => {
 		async function fetchData() {
-			const usersData = await fetchUsers();
+			const usersData = await fetchUsers(props.ID_Usuario);
 			setState({
 				users: usersData,
 			});
@@ -91,35 +83,19 @@ function Pacientes(props) {
 		setOpen3(true);
 	}
 	function addUser(newUser) {
-		const newUserM = {
-			ID_Usuario: newUser.ID_Usuario,
-			Nombre: newUser.nombre,
-			Apellidos: newUser.apellidos,
-			Correo: newUser.correo,
-			Telefono: newUser.telefono,
-			Rol: newUser.rol,
-			CONTRASENA: newUser.contrasena,
-			Foto: newUser.foto,
-		};
 		setState((state) => ({
-			users: [newUserM, ...state.users],
+			users: [newUser, ...state.users],
 		}));
 	}
 
 	function modifyUser(newUser) {
+		console.log("ahhhhhhh", newUser, state.users);
 		setState((state) => ({
 			users: state.users.map((user) => {
-				if (user.ID_Usuario === newUser.ID_Usuario) {
-					return {
-						ID_Usuario: newUser.ID_Usuario,
-						Nombre: newUser.nombre,
-						Apellidos: newUser.apellidos,
-						Correo: newUser.correo,
-						Telefono: newUser.telefono,
-						Rol: newUser.rol,
-						CONTRASENA: newUser.contrasena,
-						Foto: newUser.foto,
-					};
+				console.log(user);
+				if (user.id === newUser.id) {
+					console.log("siuuuuuuuuu");
+					return newUser;
 				} else {
 					return user;
 				}
@@ -129,7 +105,7 @@ function Pacientes(props) {
 
 	function removeUser(userID) {
 		setState((state) => ({
-			users: state.users.filter((user) => user.ID_Usuario !== userID),
+			users: state.users.filter((user) => user.id !== userID),
 		}));
 	}
 
@@ -157,7 +133,7 @@ function Pacientes(props) {
 			<div className="user-cards">
 				{state.users.map((user) => (
 					<UserCard
-						key={user.ID_Usuario}
+						key={user.id}
 						user={user}
 						openModal={openModal}
 						openModal2={openModal2}
@@ -171,6 +147,7 @@ function Pacientes(props) {
 				<ModalAdmin
 					closeModal={closeModal}
 					userID={userID}
+					doctorId={props.ID_Usuario}
 					fetchUsers={fetchUsers}
 					modifyUser={modifyUser}
 					addUser={addUser}

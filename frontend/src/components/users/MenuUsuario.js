@@ -6,18 +6,6 @@ import Pacientes from "./Subcomponents/Pacientes";
 import api from "../shared_components/APIConfig";
 import Citas from "./Subcomponents/citas/Citas";
 
-async function fetchUser(ID_Usuario) {
-	var response = await fetch(api.url + "/usuario", {
-		method: "post",
-		headers: { "Content-Type": "application/json" },
-		body: JSON.stringify({ ID_Usuario }),
-	});
-
-	if (response.status !== 200) return null;
-	var json = await response.json();
-
-	return json;
-}
 
 function MenuUsuario(props) {
 	const [state, setState] = useState({
@@ -47,22 +35,13 @@ function MenuUsuario(props) {
 		history.push("/");
 	}
 
-	useEffect(() => {
-		async function fetchData() {
-			const userData = await fetchUser(props.ID_Usuario);
-			if (!userData) return;
-
-			setState({
-				pacientes: userData.pacientes,
-			});
-		}
-		fetchData();
-	}, [props]);
 
 	function handleClick(name) {
 		setBorderState({ [name]: "3px solid #00acee" });
 		setForegroundState({ [name]: "#000" });
 	}
+
+	console.log(props.ID_Usuario);
 
 	return (
 		<div className="menuUsuarioContainer">

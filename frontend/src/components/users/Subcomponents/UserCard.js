@@ -14,7 +14,7 @@ export default function UserCard(props) {
                         aria-hidden="true"
                         className="fa fa-pencil"
                         onClick={() => {
-                            props.changeUserID(props.user.ID_Usuario);
+                            props.changeUserID(props.user.id);
                             props.openModal();
                         }}
                     ></i>
@@ -24,7 +24,7 @@ export default function UserCard(props) {
                         aria-hidden="true"
                         className="fa fa-trash"
                         onClick={async () => {
-                            props.changeUserID(props.user.ID_Usuario);
+                            props.changeUserID(props.user.id);
                             props.openModal2();
                         }}
                     ></i>
@@ -33,7 +33,7 @@ export default function UserCard(props) {
 
             <div className="image-wrapper">
                 <img
-                    src={props.user.Foto ? props.user.Foto : "/defaultUser.png"}
+                    src={props.user.foto ? props.user.foto : "/defaultUser.png"}
                     alt=""
                 />
             </div>
@@ -41,23 +41,23 @@ export default function UserCard(props) {
             <div className="userInfo">
                 <p className="user-name">
                     {" "}
-                    {props.user.Nombre && props.user.Apellidos
-                        ? props.user.Nombre + " " + props.user.Apellidos
+                    {props.user.nombre && props.user.apellido
+                        ? props.user.nombre + " " + props.user.apellido
                         : "No hay Información"}{" "}
                 </p>
 
                 <div className="rowUser">
                     <i aria-hidden="true" className="fa fa-envelope"></i>
-                    <p> {validateData(props.user.Correo)} </p>
+                    <p> {validateData(props.user.email)} </p>
                 </div>
 
                 <div className="rowUser">
                     <i aria-hidden="true" className="fas fa-phone"></i>
-                    <p> {validateData(props.user.Telefono)} </p>
+                    <p> {validateData(props.user.celular)} </p>
                 </div>
             </div>
 
-            <p className="user-role"> {validateData(props.user.Sexo)} </p>
+            <p className="user-role"> {validateData(props.user.sexo)} </p>
         </div>
     );
 }

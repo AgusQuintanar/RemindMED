@@ -278,8 +278,9 @@ function SignUp(props) {
 												const json = await data.json();
 
 												if (data.status === 200) {
+													console.log("jsonnnn", json);
 													props.saveUserSession(
-														json.ID_Usuario,
+														json.doctorId,
 														true
 													);
 													props.setAuth(true);

@@ -73,14 +73,8 @@ function App() {
                         exact
                         component={MenuUsuario}
                         isAuth={isAuth}
+                        ID_Usuario={ID_Usuario}
                     />
-
-                    {/* <ProtectedRoute
-                        path="/Laika/Calendario"
-                        exact
-                        component={Calendario}
-                        isAuth={isAuth}
-                    /> */}
 
                     <Route>
                         <ErrorPage />

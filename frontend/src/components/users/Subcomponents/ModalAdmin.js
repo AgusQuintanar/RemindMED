@@ -15,49 +15,50 @@ import api from "../../shared_components/APIConfig";
 import "../../shared_components/Styles/Boton.css";
 
 async function fetchUser(userID) {
-	var response = await fetch(api.url + "/usuario", {
-		method: "post",
+	var response = await fetch(api.url + "/getPaciente?id="+userID, {
+		method: "get",
 		headers: { "Content-Type": "application/json" },
-		body: JSON.stringify({ ID_Usuario: userID }),
 	});
 
 	if (response.status !== 200) return null;
 	var user = await response.json();
 
-	if (user.Foto) {
-		const buffer = Buffer.from(user.Foto.data);
-		const foto = buffer.toString("utf8");
-		user.Foto = foto;
-	}
+	// if (user.foto) {
+	// 	const buffer = Buffer.from(user.foto.data);
+	// 	const foto = buffer.toString("utf8");
+	// 	user.foto = foto;
+	// }
 	return user;
 }
 
 async function updateUser(userID, userData, modifyUser) {
-	var response = await fetch(api.url + "/usuario", {
+	var response = await fetch(api.url + "/updatePaciente?id="+userID, {
 		method: "put",
-		headers: { "Content-Type": "application/json" },
-		body: JSON.stringify({ ID_Usuario: userID, ...userData }),
-	});
-
-	if (response.status !== 200) return false;
-
-	modifyUser({ ID_Usuario: userID, ...userData });
-	return true;
-}
-
-async function createUser(userData, addUser) {
-	var response = await fetch(api.url + "/signup", {
-		method: "post",
 		headers: { "Content-Type": "application/json" },
 		body: JSON.stringify(userData),
 	});
 
 	if (response.status !== 200) return false;
 
-	var userID = await response.json();
-	userID = userID[0];
-	addUser({ ID_Usuario: userID, ...userData });
+	modifyUser({ id: userID, ...userData });
 	return true;
+}
+
+async function createUser(userData, addUser) {
+	var response = await fetch(api.url + "/createPaciente", {
+		method: "post",
+		headers: { "Content-Type": "application/json" },
+		body: JSON.stringify(userData),
+	});
+
+
+	var res = await response.json();
+
+	if (response.status !== 200) return [false, res];
+
+	let userID = res[0];
+	addUser({ ID_Usuario: userID, ...userData });
+	return [true, userID];
 }
 
 function validateData(data) {
@@ -80,59 +81,69 @@ function ModalAdmin(props) {
 
 	const [stateUser, setStateUser] = useState({
 		nombre: "",
-		apellidos: "",
-		correo: "",
-		telefono: "",
-		rol: "",
-		contrasena: "",
+		apellido: "",
+		email: "",
+		celular: "",
+		sexo: "",
+		estadoCivil: "",
+		fechaNacimiento: null,
+		edad: "",
 		foto: null,
 	});
-
-	function validateEmail(email) {
-		const re = new RegExp(
-			/^(("[\w-\s]+")|([\w-]+(?:\.[\w-]+)*)|("[\w-\s]+")([\w-]+(?:\.[\w-]+)*))(@((?:[\w-]+\.)*\w[\w-]{0,66})\.([a-z]{2,6}(?:\.[a-z]{2})?)$)|(@\[?((25[0-5]\.|2[0-4][0-9]\.|1[0-9]{2}\.|[0-9]{1,2}\.))((25[0-5]|2[0-4][0-9]|1[0-9]{2}|[0-9]{1,2})\.){2}(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[0-9]{1,2})\]?$)/i
-		);
-		return re.test(email);
-	}
 
 	function handleChange(event) {
 		setStateUser({ ...stateUser, [event.target.name]: event.target.value });
 	}
 
-	function handleSelect(event, data) {
-		setStateUser({ ...stateUser, rol: data.value });
+	function handleSelect(event, data, name) {
+		console.log("holaaaaaaaaaa");
+		console.log(event, data, name, "\n\n\n\n\n");
+		setStateUser({ ...stateUser, [name]: data.value });
 	}
 
 	useEffect(() => {
 		if (!props.userID) return;
 		async function fetchData() {
 			const userData = await fetchUser(props.userID);
+			if (!userData) return;
 			setStateUser({
-				nombre: validateData(userData.Nombre),
-				apellidos: validateData(userData.Apellidos),
-				correo: validateData(userData.Correo),
-				telefono: validateData(userData.Telefono),
-				rol: validateData(userData.Rol),
-				contrasena: validateData(userData.CONTRASENA),
-				foto: userData.Foto,
+				nombre: validateData(userData.nombre),
+				apellido: validateData(userData.apellido),
+				email: validateData(userData.email),
+				celular: validateData(userData.celular),
+				sexo: validateData(userData.sexo),
+				estadoCivil: validateData(userData.estadoCivil),
+				fechaNacimiento: validateData(userData.fechaNacimiento),
+				edad: validateData(userData.edad),
+				foto: userData.foto,
 			});
 		}
 		fetchData();
 	}, [props]);
 
-	const rolesOptions = [
-		{ key: "Voluntario", value: "Voluntario", text: "Voluntario" },
-		{ key: "Administrador", value: "Administrador", text: "Administrador" },
+	const sexoOptions = [
+		{ key: "Masculino", value: "Masculino", text: "Masculino" },
+		{ key: "Femenino", value: "Femenino", text: "Femenino" },
+	];
+
+	const estadoCivilOptions = [
+		{ key: "Soltero", value: "Soltero", text: "Soltero" },
+		{ key: "Casado", value: "Casado", text: "Casado" },
+		{ key: "Divorciado", value: "Divorciado", text: "Divorciado" },
+		{ key: "Viudo", value: "Viudo", text: "Viudo" },
+		{ key: "Otro", value: "Otro", text: "Otro" },
 	];
 
 	function handleRestablecer() {
 		setStateUser({
 			nombre: "",
-			apellidos: "",
-			correo: "",
-			telefono: "",
-			rol: "",
-			contrasena: "",
+			apellido: "",
+			email: "",
+			celular: "",
+			sexo: "",
+			estadoCivil: "",
+			fechaNacimiento: null,
+			edad: "",
 			foto: null,
 		});
 	}
@@ -161,7 +172,9 @@ function ModalAdmin(props) {
 					setState({ open: false });
 				}}
 			>
-				<Modal.Header>{props.userID ? "Modificar Paciente" : "Registrar Paciente"}</Modal.Header>
+				<Modal.Header>
+					{props.userID ? "Modificar Paciente" : "Registrar Paciente"}
+				</Modal.Header>
 				<Modal.Content image>
 					<FotoUsuarioModal
 						id="foto"
@@ -201,9 +214,9 @@ function ModalAdmin(props) {
 										icon="address book"
 										iconPosition="left"
 										placeholder="Apellido(s)"
-										name="apellidos"
+										name="apellido"
 										onChange={handleChange}
-										value={stateUser.apellidos}
+										value={stateUser.apellido}
 									/>
 								</div>
 							</div>
@@ -220,9 +233,9 @@ function ModalAdmin(props) {
 										icon="envelope"
 										iconPosition="left"
 										placeholder="Correo"
-										name="correo"
+										name="email"
 										onChange={handleChange}
-										value={stateUser.correo}
+										value={stateUser.email}
 									/>
 								</div>
 								<div className="block2RG">
@@ -236,9 +249,9 @@ function ModalAdmin(props) {
 										icon="call"
 										iconPosition="left"
 										placeholder="Celular"
-										name="telefono"
+										name="celular"
 										onChange={handleChange}
-										value={stateUser.telefono}
+										value={stateUser.celular}
 									/>
 								</div>
 							</div>
@@ -251,15 +264,15 @@ function ModalAdmin(props) {
 											height: "100%",
 										}}
 										button
-										name="rol"
+										name="sexo"
 										selection
 										className="icon selectRol"
 										labeled
 										icon="group"
-										options={rolesOptions}
+										options={sexoOptions}
 										placeholder="Sexo"
-										onChange={handleSelect}
-										value={stateUser.rol}
+										onChange={(event, data) => handleSelect(event, data, "sexo")}
+										value={stateUser.sexo}
 									/>
 								</div>
 								<div className="block2RG">
@@ -269,15 +282,15 @@ function ModalAdmin(props) {
 											height: "100%",
 										}}
 										button
-										name="rol"
+										name="estadoCivil"
 										selection
 										className="icon selectRol"
 										labeled
 										icon="group"
-										options={rolesOptions}
+										options={estadoCivilOptions}
 										placeholder="Estado Civil"
-										onChange={handleSelect}
-										value={stateUser.rol}
+										onChange={(event, data) => handleSelect(event, data, "estadoCivil")}
+										value={stateUser.estadoCivil}
 									/>
 								</div>
 							</div>
@@ -293,9 +306,9 @@ function ModalAdmin(props) {
 										icon="address card"
 										iconPosition="left"
 										placeholder="Fecha nacimiento"
-										name="nombre"
+										name="fechaNacimiento"
 										onChange={handleChange}
-										value={stateUser.nombre}
+										value={stateUser.fechaNacimiento}
 									/>
 								</div>
 								<div className="block2RG">
@@ -309,9 +322,9 @@ function ModalAdmin(props) {
 										icon="address book"
 										iconPosition="left"
 										placeholder="Edad"
-										name="apellidos"
+										name="edad"
 										onChange={handleChange}
-										value={stateUser.apellidos}
+										value={stateUser.edad}
 									/>
 								</div>
 							</div>
@@ -343,62 +356,46 @@ function ModalAdmin(props) {
 						color="green"
 						inverted
 						onClick={async () => {
-							if (
-								stateUser.nombre &&
-								stateUser.apellidos &&
-								stateUser.correo &&
-								stateUser.telefono &&
-								stateUser.rol &&
-								stateUser.contrasena
-							) {
-								if (!validateEmail(stateUser.correo)) {
-									setMessage(
-										"El correo ingresado no es correcto"
-									);
-									setSuccess(false);
-								} else {
-									var success;
-									if (props.userID) {
-										success = await updateUser(
-											props.userID,
-											stateUser,
-											props.modifyUser
-										);
-										setSuccess(success);
-										if (success) {
-											setMessage(
-												"Actualizacion de datos del usuario exitosa!"
-											);
-										} else {
-											setMessage(
-												"Ha ocurrido un error al actualizar el usuario! Verifique que el correo sea unico."
-											);
-										}
-									} else {
-										success = await createUser(
-											stateUser,
-											props.addUser
-										);
-										setSuccess(success);
+							var success;
+							var response;
 
-										if (success) {
-											setMessage(
-												"Se ha creado el usuario de manera exitosa!"
-											);
-										} else {
-											setMessage(
-												"Ha ocurrido un error al crear el usuario! Verifique que el correo sea unico."
-											);
-										}
-									}
-								}
-
-								// Funcion de insertar nuevo usuario
-							} else {
-								setMessage(
-									"Debe llenar todos los campos para que el registro sea exitoso"
+							if (props.userID) {
+								success = await updateUser(
+									props.userID,
+									stateUser,
+									props.modifyUser
 								);
-								setSuccess(false);
+								setSuccess(success);
+								if (success) {
+									setMessage(
+										"Actualizacion de datos del usuario exitosa!"
+									);
+								} else {
+									setMessage(
+										"Ha ocurrido un error al actualizar el usuario! Verifique que el correo sea unico."
+									);
+								}
+							} else {
+								console.log(stateUser)
+								
+								const a = await createUser(
+									{doctorId: props.doctorId, ...stateUser},
+									props.addUser
+								);
+								success = a[0];
+								response = a[1];
+
+								setSuccess(success);
+
+								if (success) {
+									setMessage(
+										"Se ha creado el usuario de manera exitosa!"
+									);
+								} else {
+									setMessage(
+										"Ha ocurrido un error al crear el paciente!. " + response
+									);
+								}
 							}
 
 							setSecondOpen(true);
