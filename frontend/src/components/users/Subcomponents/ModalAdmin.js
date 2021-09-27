@@ -56,8 +56,8 @@ async function createUser(userData, addUser) {
 
 	if (response.status !== 200) return [false, res];
 
-	let userID = res[0];
-	addUser({ ID_Usuario: userID, ...userData });
+	let userID = res;
+	addUser({ id: userID, ...userData });
 	return [true, userID];
 }
 

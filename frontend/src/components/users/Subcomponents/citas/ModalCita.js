@@ -14,50 +14,83 @@ import "./Styles/ModalCita.css";
 import api from "../../../shared_components/APIConfig";
 import "../../../shared_components/Styles/Boton.css";
 import Datetime from "react-datetime";
+import { deleteUser } from "@firebase/auth";
 
-async function fetchUser(citaID) {
-	var response = await fetch(api.url + "/usuario", {
-		method: "post",
+async function fetchCita(citaID) {
+	var response = await fetch(api.url + "/getCita?id=" + citaID, {
+		method: "get",
 		headers: { "Content-Type": "application/json" },
-		body: JSON.stringify({ ID_Usuario: citaID }),
 	});
 
 	if (response.status !== 200) return null;
-	var user = await response.json();
+	var cita = await response.json();
 
-	if (user.Foto) {
-		const buffer = Buffer.from(user.Foto.data);
-		const foto = buffer.toString("utf8");
-		user.Foto = foto;
-	}
-	return user;
+	console.log("citaaaaa", cita.horario);
+
+	return cita;
 }
 
-async function updateUser(citaID, userData, modifyUser) {
-	var response = await fetch(api.url + "/usuario", {
+async function fetchPacientes(doctorId) {
+	console.log("doctor id", doctorId);
+
+	var response = await fetch(api.url + "/getPacientes?doctorId=" + doctorId, {
+		method: "get",
+		headers: { "Content-Type": "application/json" },
+	});
+
+	if (response.status !== 200) return [];
+	var users = await response.json();
+
+	var pacientes = [];
+	users.forEach((p) => {
+		pacientes.push({
+			key: p.id,
+			value: p.id,
+			text: validateData(p.nombre) + " " + validateData(p.apellido),
+		});
+	});
+
+	return pacientes;
+}
+
+async function updateCita(citaID, citaData, modifyCita) {
+	var response = await fetch(api.url + "/updateCita?id=" + citaID, {
 		method: "put",
 		headers: { "Content-Type": "application/json" },
-		body: JSON.stringify({ ID_Usuario: citaID, ...userData }),
+		body: JSON.stringify(citaData),
 	});
 
 	if (response.status !== 200) return false;
 
-	modifyUser({ ID_Usuario: citaID, ...userData });
+	modifyCita({ id: citaID, ...citaData });
 	return true;
 }
 
-async function createUser(userData, addUser) {
-	var response = await fetch(api.url + "/signup", {
+async function createCita(citaData, addCita) {
+	var response = await fetch(api.url + "/createCita", {
 		method: "post",
 		headers: { "Content-Type": "application/json" },
-		body: JSON.stringify(userData),
+		body: JSON.stringify(citaData),
 	});
 
 	if (response.status !== 200) return false;
 
 	var citaID = await response.json();
-	citaID = citaID[0];
-	addUser({ ID_Usuario: citaID, ...userData });
+
+	addCita({ id: citaID, ...citaData });
+	return true;
+}
+
+async function deleteCita(citaID, removeCita) {
+	console.log("citaID", citaID);
+	var response = await fetch(api.url + "/deleteCita?id=" + citaID, {
+		method: "delete",
+		headers: { "Content-Type": "application/json" },
+	});
+
+	if (response.status !== 200) return false;
+	removeCita(citaID);
+
 	return true;
 }
 
@@ -81,64 +114,44 @@ function ModalCita(props) {
 
 	const [stateCita, setStateUser] = useState({
 		nombre: "",
-		apellidos: "",
-		correo: "",
-		telefono: "",
-		rol: "",
-		contrasena: "",
-		foto: null,
+		pacienteId: "",
+		motivo: "",
+		horario: null,
+		comentarios: "",
 	});
-
-	function validateEmail(email) {
-		const re = new RegExp(
-			/^(("[\w-\s]+")|([\w-]+(?:\.[\w-]+)*)|("[\w-\s]+")([\w-]+(?:\.[\w-]+)*))(@((?:[\w-]+\.)*\w[\w-]{0,66})\.([a-z]{2,6}(?:\.[a-z]{2})?)$)|(@\[?((25[0-5]\.|2[0-4][0-9]\.|1[0-9]{2}\.|[0-9]{1,2}\.))((25[0-5]|2[0-4][0-9]|1[0-9]{2}|[0-9]{1,2})\.){2}(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[0-9]{1,2})\]?$)/i
-		);
-		return re.test(email);
-	}
 
 	function handleChange(event) {
 		setStateUser({ ...stateCita, [event.target.name]: event.target.value });
 	}
 
 	function handleSelect(event, data) {
-		setStateUser({ ...stateCita, rol: data.value });
+		setStateUser({ ...stateCita, pacienteId: data.value });
 	}
 
 	useEffect(() => {
-		if (!props.citaID) return;
 		async function fetchData() {
-			const userData = await fetchUser(props.citaID);
-			setStateUser({
-				nombre: validateData(userData.Nombre),
-				apellidos: validateData(userData.Apellidos),
-				correo: validateData(userData.Correo),
-				telefono: validateData(userData.Telefono),
-				rol: validateData(userData.Rol),
-				contrasena: validateData(userData.CONTRASENA),
-				foto: userData.Foto,
-			});
+			const pacientes = await fetchPacientes(props.doctorId);
+			setPacienteOptions(pacientes);
+			if (!props.citaID) return;
+			const cita = await fetchCita(props.citaID);
+			setStateUser(cita);
 		}
 		fetchData();
 	}, [props]);
 
-	const rolesOptions = [
-		{ key: "Voluntario", value: "Voluntario", text: "Voluntario" },
-		{ key: "Administrador", value: "Administrador", text: "Administrador" },
-	];
-
-	const [value, onChange] = useState(new Date());
+	const [pacienteOptions, setPacienteOptions] = useState([]);
 
 	function handleRestablecer() {
 		setStateUser({
 			nombre: "",
-			apellidos: "",
-			correo: "",
-			telefono: "",
-			rol: "",
-			contrasena: "",
-			foto: null,
+			pacienteId: "",
+			motivo: "",
+			horario: null,
+			comentarios: "",
 		});
 	}
+
+	if (!stateCita) return null;
 
 	return (
 		<div>
@@ -150,12 +163,12 @@ function ModalCita(props) {
 					setState({ open: false });
 				}}
 			>
-				<Modal.Header>{props.userID ? "Modificar Cita" : "Crear Cita"}</Modal.Header>
+				<Modal.Header>
+					{props.citaID ? "Modificar Cita" : "Crear Cita"}
+				</Modal.Header>
 				<Modal.Content image>
 					<Modal.Description className="descriptionRG">
-						<Header>
-							Datos de Cita
-						</Header>
+						<Header>Datos de Cita</Header>
 						<div className="containerCita">
 							<div className="blockModal">
 								<div className="block1RG">
@@ -168,7 +181,7 @@ function ModalCita(props) {
 										placeholder="Nombre de la cita"
 										name="nombre"
 										onChange={handleChange}
-										value={stateCita.nombre}
+										value={validateData(stateCita.nombre)}
 									/>
 								</div>
 								<div className="block2RG">
@@ -177,17 +190,19 @@ function ModalCita(props) {
 											width: "100%",
 										}}
 										button
-										name="rol"
+										name="pacienteId"
 										selection
 										fluid
 										search
 										className="icon selectRol"
 										labeled
 										icon="group"
-										options={rolesOptions}
+										options={pacienteOptions}
 										placeholder="Paciente"
 										onChange={handleSelect}
-										value={stateCita.rol}
+										value={validateData(
+											stateCita.pacienteId
+										)}
 									/>
 								</div>
 							</div>
@@ -201,9 +216,9 @@ function ModalCita(props) {
 										icon="medkit"
 										iconPosition="left"
 										placeholder="Motivo"
-										name="correo"
+										name="motivo"
 										onChange={handleChange}
-										value={stateCita.correo}
+										value={validateData(stateCita.motivo)}
 									/>
 								</div>
 								<div className="block2RG horarioPicker">
@@ -211,7 +226,20 @@ function ModalCita(props) {
 										aria-hidden="true"
 										class="calendar icon"
 									></i>
-									<Datetime initialValue="Horario"/>
+									<Datetime
+										value={
+											stateCita.horario
+												? new Date(stateCita.horario)
+												: "Horario"
+										}
+										name="horario"
+										onChange={(event) => {
+											setStateUser({
+												...stateCita,
+												horario: event.toDate(),
+											});
+										}}
+									/>
 								</div>
 							</div>
 
@@ -224,9 +252,11 @@ function ModalCita(props) {
 										icon="comment"
 										iconPosition="left"
 										placeholder="Comentarios"
-										name="contrasena"
+										name="comentarios"
 										onChange={handleChange}
-										value={stateCita.contrasena}
+										value={validateData(
+											stateCita.comentarios
+										)}
 									/>
 								</div>
 							</div>
@@ -234,12 +264,38 @@ function ModalCita(props) {
 					</Modal.Description>
 				</Modal.Content>
 				<Modal.Actions>
+					{props.citaID ? (
+						<Button
+							style={{
+								borderRadius: "0.4rem",
+								margin: "0% 2% 0% 0%",
+							}}
+							color="red"
+							inverted
+							onClick={async () => {
+								var success = await deleteCita(
+									props.citaID,
+									props.removeCita
+								);
+
+								if (success) {
+									setMessage("Cita borrada con éxito.");
+								} else {
+									setMessage("La cita no pudo ser borrada.");
+								}
+								setSecondOpen(true);
+							}}
+						>
+							<Icon name="cancel" /> Eliminar
+						</Button>
+					) : null}
+
 					<Button
 						style={{
 							borderRadius: "0.4rem",
 							margin: "0% 2% 0% 0%",
 						}}
-						color="red"
+						color="blue"
 						inverted
 						onClick={() => {
 							props.closeModal();
@@ -258,53 +314,49 @@ function ModalCita(props) {
 						color="green"
 						inverted
 						onClick={async () => {
+							console.log(stateCita);
 							if (
 								stateCita.nombre &&
-								stateCita.apellidos &&
-								stateCita.correo &&
-								stateCita.telefono &&
-								stateCita.rol &&
-								stateCita.contrasena
+								stateCita.pacienteId &&
+								stateCita.motivo &&
+								stateCita.horario &&
+								stateCita.comentarios
 							) {
-								if (!validateEmail(stateCita.correo)) {
-									setMessage(
-										"El correo ingresado no es correcto"
+								var success;
+								if (props.citaID) {
+									success = await updateCita(
+										props.citaID,
+										stateCita,
+										props.modifyCita
 									);
-									setSuccess(false);
-								} else {
-									var success;
-									if (props.citaID) {
-										success = await updateUser(
-											props.citaID,
-											stateCita,
-											props.modifyUser
+									setSuccess(success);
+									if (success) {
+										setMessage(
+											"Actualizacion de datos del usuario exitosa!"
 										);
-										setSuccess(success);
-										if (success) {
-											setMessage(
-												"Actualizacion de datos del usuario exitosa!"
-											);
-										} else {
-											setMessage(
-												"Ha ocurrido un error al actualizar el usuario! Verifique que el correo sea unico."
-											);
-										}
 									} else {
-										success = await createUser(
-											stateCita,
-											props.addUser
+										setMessage(
+											"Ha ocurrido un error al actualizar el usuario! Verifique que el correo sea unico."
 										);
-										setSuccess(success);
+									}
+								} else {
+									success = await createCita(
+										{
+											doctorId: props.doctorId,
+											...stateCita,
+										},
+										props.addCita
+									);
+									setSuccess(success);
 
-										if (success) {
-											setMessage(
-												"Se ha creado el usuario de manera exitosa!"
-											);
-										} else {
-											setMessage(
-												"Ha ocurrido un error al crear el usuario! Verifique que el correo sea unico."
-											);
-										}
+									if (success) {
+										setMessage(
+											"Se ha creado el usuario de manera exitosa!"
+										);
+									} else {
+										setMessage(
+											"Ha ocurrido un error al crear el usuario! Verifique que el correo sea unico."
+										);
 									}
 								}
 

@@ -6,14 +6,14 @@ import moment from "moment";
 
 import "./Styles/Calendario.css";
 import api from "../../../shared_components/APIConfig";
-import ModalCita from "./ModalCita"
+import ModalCita from "./ModalCita";
 
 require("moment/locale/es.js");
 
 const localizer = momentLocalizer(moment);
 
-async function fetchEvents() {
-	var response = await fetch(api.url + "/events", {
+async function fetchEvents(doctorId) {
+	var response = await fetch(api.url + "/getCitas?id=" + doctorId, {
 		method: "get",
 		headers: { "Content-Type": "application/json" },
 	});
@@ -21,7 +21,14 @@ async function fetchEvents() {
 	if (response.status !== 200) return [];
 	var events = await response.json();
 
+	console.log("events", events);
+
 	return events;
+}
+
+
+function addMinutes(date, minutes) {
+	return new Date(date.getTime() + minutes * 60000);
 }
 
 async function fetchCita(citaID) {
@@ -36,186 +43,43 @@ async function fetchCita(citaID) {
 	return events;
 }
 
-function generateEvent(message, animalId, animalName, date) {
-	const eventDate = new Date(date);
-	eventDate.setHours(12, 0, 0, 0);
+function generateEvent(cita) {
 	const generatedEvent = {
-		title: message + animalName + " (ID: " + animalId + ")",
-		start: eventDate,
-		end: eventDate,
-		cita_id: "fg344e3g",
+		title: cita.nombre,
+		start: new Date(cita.horario),
+		end: addMinutes(new Date(cita.horario), 30),
+		id: cita.id,
 	};
 	return generatedEvent;
 }
 
-function decodeEvents(encodedEvents) {
-	if (!encodedEvents) return;
-
-	const decoder = {
-		FechaRescate: "Se rescato a ",
-		FechaInicioHT: "Inicio de Hogar Temporal de ",
-		VisitaAdopcion: "Se realizo visita de adopcion a ",
-		FechaAdopcion: "Se adopto a ",
-		FechaVacuna1: {
-			Canino: "Puppy",
-			Felino: "Triple Viral Felina",
-			Otro: "Vacuna 1",
-		},
-		FechaVacuna2: {
-			Canino: "Refuerzo Puppy",
-			Felino: "Refuerzo Triple Viral Felina",
-			Otro: "Vacuna 2",
-		},
-		FechaVacuna3: {
-			Canino: "Multiple",
-			Felino: "Leucemia",
-			Otro: "Vacuna 3",
-		},
-		FechaVacuna4: {
-			Canino: "Refuerzo Multiple",
-			Felino: "Desparasitacion",
-			Otro: "Vacuna 4",
-		},
-		FechaVacuna5: {
-			Canino: "Rabia",
-			Felino: "Rabia",
-			Otro: "Vacuna 5",
-		},
-	};
-
-	var eventsList = [];
-
-	encodedEvents.forEach((animal) => {
-		const animalId = animal["ID_Animal"];
-		const animalName = animal["Nombre"];
-		const animalSpecie = animal["Especie"];
-
-		for (const event in animal) {
-			const eventDate = animal[event];
-			if (!eventDate) continue;
-
-			if (
-				event === "ID_Animal" ||
-				event === "Nombre" ||
-				event === "Especie"
-			)
-				continue;
-
-			if (event.includes("FechaVacuna")) {
-				if (!decoder[event]) continue;
-
-				const vacuna = decoder[event][animalSpecie];
-
-				const numFecha = event.charAt(event.length - 1);
-				const estaVacuando = animal["vacuna" + numFecha];
-
-				const mensaje =
-					estaVacuando === 1
-						? "Se aplico vacuna " + vacuna + " a "
-						: "Cita agendada de vacuna " + vacuna + " de ";
-
-				const generatedEvent = generateEvent(
-					mensaje,
-					animalId,
-					animalName,
-					eventDate
-				);
-				eventsList.push(generatedEvent);
-			} else if (event === "CitasMedicas") {
-				const citasMedicas = eventDate.split(",");
-				citasMedicas.forEach((citaMedica) => {
-					const generatedEvent = generateEvent(
-						"Cita medica de ",
-						animalId,
-						animalName,
-						citaMedica
-					);
-					eventsList.push(generatedEvent);
-				});
-			} else if (event === "FechaEsterilizacion") {
-				const estaEsterilizado = animal["EstaEsterilizado"];
-				const mensaje =
-					estaEsterilizado === "Sí" || estaEsterilizado === "Si"
-						? "Se esterilizo a "
-						: "Cita agendada de esterilizacion de ";
-
-				const generatedEvent = generateEvent(
-					mensaje,
-					animalId,
-					animalName,
-					eventDate
-				);
-				eventsList.push(generatedEvent);
-			} else {
-				if (!decoder[event]) continue;
-				const generatedEvent = generateEvent(
-					decoder[event],
-					animalId,
-					animalName,
-					eventDate
-				);
-				eventsList.push(generatedEvent);
-			}
-		}
-	});
-
-	return eventsList;
-}
-
 function Citas(props) {
-	const [events, setEvents] = useState([]);
+	const [citas, setCitas] = useState([]);
 
-	const [state, setState] = useState({
-		citas: [],
-	});
-
-    const [citaID, setCitaID] = useState("");
+	const [citaID, setCitaID] = useState("");
 
 	const [open, setOpen] = useState(false);
 	const [open2, setOpen2] = useState(false);
 	const [open3, setOpen3] = useState(false);
 
 	function addCita(newCita) {
-		const newCitaM = {
-			ID_Usuario: newCita.ID_Usuario,
-			Nombre: newCita.nombre,
-			Apellidos: newCita.apellidos,
-			Correo: newCita.correo,
-			Telefono: newCita.telefono,
-			Rol: newCita.rol,
-			CONTRASENA: newCita.contrasena,
-			Foto: newCita.foto,
-		};
-		setState((state) => ({
-			citas: [newCitaM, ...state.citas],
-		}));
+		setCitas([generateEvent(newCita), ...citas]);
 	}
 
 	function modifyCita(newCita) {
-		setState((state) => ({
-			citas: state.citas.map((cita) => {
-				if (cita.ID_Usuario === newCita.ID_Usuario) {
-					return {
-						ID_Usuario: newCita.ID_Usuario,
-						Nombre: newCita.nombre,
-						Apellidos: newCita.apellidos,
-						Correo: newCita.correo,
-						Telefono: newCita.telefono,
-						Rol: newCita.rol,
-						CONTRASENA: newCita.contrasena,
-						Foto: newCita.foto,
-					};
+		setCitas((citas) =>
+			citas.map((cita) => {
+				if (cita.id === newCita.id) {
+					return generateEvent(newCita);
 				} else {
 					return cita;
 				}
-			}),
-		}));
+			})
+		);
 	}
 
 	function removeCita(citaID) {
-		setState((state) => ({
-			citas: state.citas.filter((cita) => cita.ID_Usuario !== citaID),
-		}));
+		setCitas((citas) => (citas.filter((cita) => cita.id !== citaID)));
 	}
 
 	function closeModal() {
@@ -242,13 +106,22 @@ function Citas(props) {
 		setOpen3(true);
 	}
 
+	function changeCitaID(id) {
+		setCitaID(id);
+	}
+
 	useEffect(() => {
 		async function fetchData() {
-			const eventsData = await fetchEvents();
+			const eventsData = await fetchEvents(props.ID_Usuario);
 
-			const eventList = decodeEvents(eventsData);
+			let eventList = [];
 
-			setEvents(eventList);
+			eventsData.forEach((event) => {
+				const e = generateEvent(event);
+				eventList.push(e);
+			});
+
+			setCitas(eventList);
 		}
 		fetchData();
 	}, [props]);
@@ -270,9 +143,13 @@ function Citas(props) {
 				<Calendar
 					popup
 					localizer={localizer}
-					events={events}
+					events={citas}
 					defaultDate={new Date()}
-					onSelectEvent={(event) => console.log(event)}
+					onSelectEvent={(event) => {
+						console.log(event.id, event)
+						changeCitaID(event.id);
+						openModal();
+					}}
 				/>
 			</div>
 			{open ? (
@@ -282,6 +159,8 @@ function Citas(props) {
 					fetchCita={fetchCita}
 					modifyCita={modifyCita}
 					addCita={addCita}
+					doctorId={props.ID_Usuario}
+					removeCita={removeCita}
 				/>
 			) : null}
 		</div>
