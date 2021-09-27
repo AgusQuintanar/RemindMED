@@ -8,6 +8,7 @@ const firestore = firebase.firestore();
 const addAppointment = async(req, res, next) => {
     try {
         const data = req.body;
+        data.horario = new Date(data.horario);
         const response = await firestore.collection("Appointments").add(data);
         res.json(response.id);
     } catch (error) {
@@ -69,6 +70,7 @@ const updateAppointment = async(req, res, next) => {
     try {
         const id = req.query.id;
         const data = req.body;
+        data.horario = new Date(data.horario);
         const appointment = await firestore.collection("Appointments").doc(id);
         await appointment.update(data);
         res.json("Appointment record updated successfully");
