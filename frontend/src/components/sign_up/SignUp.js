@@ -9,7 +9,7 @@ import api from "../shared_components/APIConfig";
 
 async function fetchData(state) {
 	console.log(state);
-	var response = await fetch(api.url + "/Login", {
+	var response = await fetch(api.url + "/signUp", {
 		method: "post",
 		headers: { "Content-Type": "application/json" },
 		body: JSON.stringify(state),
@@ -21,7 +21,7 @@ function SignUp(props) {
 	const [state, setState] = useState({
 		nombre: "",
 		apellido: "",
-		correo: "",
+		email: "",
 		telefono: "",
 		contrasena: "",
 		conf_contrasena: "",
@@ -36,7 +36,7 @@ function SignUp(props) {
 	const history = useHistory();
 
 	function handleClick() {
-		history.push("/Laika/Consulta");
+		history.push("/RemindMED");
 	}
 
 	function goToSignIn() {
@@ -209,7 +209,7 @@ function SignUp(props) {
 											<input
 												type="email"
 												autoComplete="off"
-												name="correo"
+												name="email"
 												onChange={handleChange}
 											/>
 										</div>
@@ -286,18 +286,19 @@ function SignUp(props) {
 
 													handleClick();
 												} else if (
-													data.status === 404
+													data.status === 404 || data.status === 400
 												) {
+													console.log(json);
 													setAlertState({
 														...alertState,
 														openError: true,
-														msg: "Correo y contraseña inválidos",
+														msg: json
 													});
 												} else {
 													setAlertState({
 														...alertState,
 														openError: true,
-														msg: "No se puede conectar con el servidor en estos momentos. Porvafor intente mas tarde.",
+														msg: "No se puede conectar con el servidor en estos momentos. Porfavor intente mas tarde.",
 													});
 												}
 											}}

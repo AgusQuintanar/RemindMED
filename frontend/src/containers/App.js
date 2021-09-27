@@ -54,11 +54,11 @@ function App() {
 
                 <Switch>
                     <Route path="/" exact>
-                        {/* <Login
+                        <Login
                             setAuth={setAuth}
                             saveUserSession={saveUserSession}
-                        /> */}
-                        <MenuUsuario />
+                        />
+                        {/* <MenuUsuario /> */}
                     </Route>
 
                     <Route path="/SignUp" exact>

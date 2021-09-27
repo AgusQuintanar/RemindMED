@@ -6,16 +6,21 @@ import AlertTitle from "@material-ui/lab/AlertTitle";
 import Collapse from "@material-ui/core/Collapse";
 import Alert from "@material-ui/lab/Alert";
 import api from "../shared_components/APIConfig";
+import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
+import { initializeApp } from 'firebase/app';
 
-async function fetchData(state) {
-    console.log(state);
-	var response = await fetch(api.url + "/Login", {
-		method: "post",
-		headers: { "Content-Type": "application/json" },
-		body: JSON.stringify(state),
-	});
-	return response;
-}
+const firebaseConfig = {
+    apiKey: "AIzaSyCkLoDfpk7UfE6tBVIssITp9t8Ym9Y8rCs",
+    authDomain: "remindmed-408e4.firebaseapp.com",
+    databaseURL: "https://remindmed-408e4-default-rtdb.firebaseio.com",
+    projectId: "remindmed-408e4",
+    storageBucket: "remindmed-408e4.appspot.com",
+    messagingSenderId: "360254772107",
+    appId: "1:360254772107:web:25bfcad9fcf85f787f958e"
+  };
+
+
+const app = initializeApp(firebaseConfig);
 
 function Login(props) {
 	const [state, setState] = useState({ correo: "", contrasena: "" });
@@ -28,7 +33,7 @@ function Login(props) {
 	const history = useHistory();
 
 	function handleClick() {
-		history.push("/Laika/Consulta");
+		history.push("/RemindMED");
 	}
 
 	function goToSignUp() {
@@ -199,34 +204,39 @@ function Login(props) {
 											onClick={async () => {
 												console.log("hola");
 
-												const data = await fetchData(
-													state
-												);
-												const json = await data.json();
+												const auth = getAuth(app);
+												signInWithEmailAndPassword(
+													auth,
+													state.correo,
+													state.contrasena
+												)
+													.then((userCredential) => {
+														// Signed in
+														const user =
+															userCredential.user;
 
-												if (data.status === 200) {
-													props.saveUserSession(
-														json.ID_Usuario,
-														true
-													);
-													props.setAuth(true);
+                                                        console.log(user);
 
-													handleClick();
-												} else if (
-													data.status === 404
-												) {
-													setAlertState({
-														...alertState,
-														openError: true,
-														msg: "Correo y contraseña inválidos",
+														props.saveUserSession(
+															"1234",
+															true
+														);
+														props.setAuth(true);
+
+														handleClick();
+													})
+													.catch((error) => {
+														const errorCode =
+															error.code;
+														const errorMessage =
+															error.message;
+
+														setAlertState({
+															...alertState,
+															openError: true,
+															msg: error.message,
+														});
 													});
-												} else {
-													setAlertState({
-														...alertState,
-														openError: true,
-														msg: "No se puede conectar con el servidor en estos momentos. Porvafor intente mas tarde.",
-													});
-												}
 											}}
 										/>
 									</div>
