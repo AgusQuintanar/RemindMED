@@ -5,6 +5,8 @@ import "./App.css";
 import ErrorPage from "../components/shared_components/error_page/ErrorPage";
 import Login from "../components/login/Login";
 import SignUp from "../components/sign_up/SignUp";
+import MenuUsuario from "../components/users/MenuUsuario";
+import ProtectedRoute from "../components/shared_components/ProtectedRoute"
 
 function saveUserSession(ID_User, isAuth) {
     sessionStorage.setItem(
@@ -52,10 +54,11 @@ function App() {
 
                 <Switch>
                     <Route path="/" exact>
-                        <Login
+                        {/* <Login
                             setAuth={setAuth}
                             saveUserSession={saveUserSession}
-                        />
+                        /> */}
+                        <MenuUsuario />
                     </Route>
 
                     <Route path="/SignUp" exact>
@@ -65,12 +68,12 @@ function App() {
                         />
                     </Route>
 
-                    {/* <ProtectedRoute
-                        path="/Laika/Consulta"
+                    <ProtectedRoute
+                        path="/RemindMED"
                         exact
-                        component={Consulta}
+                        component={MenuUsuario}
                         isAuth={isAuth}
-                    /> */}
+                    />
 
                     {/* <ProtectedRoute
                         path="/Laika/Calendario"

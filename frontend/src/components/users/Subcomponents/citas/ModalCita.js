@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import "../Styles/UserCard.css";
+import "./Styles/CitaCard.css";
+import "react-datetime/css/react-datetime.css";
 
 import {
 	Button,
@@ -9,16 +10,16 @@ import {
 	Header,
 	Input,
 } from "semantic-ui-react";
-import "../Styles/ModalAdmin.css";
-import FotoUsuarioModal from "./FotoUsuarioModal";
-import api from "../../shared_components/APIConfig";
-import "../../shared_components/Styles/Boton.css";
+import "./Styles/ModalCita.css";
+import api from "../../../shared_components/APIConfig";
+import "../../../shared_components/Styles/Boton.css";
+import Datetime from "react-datetime";
 
-async function fetchUser(userID) {
+async function fetchUser(citaID) {
 	var response = await fetch(api.url + "/usuario", {
 		method: "post",
 		headers: { "Content-Type": "application/json" },
-		body: JSON.stringify({ ID_Usuario: userID }),
+		body: JSON.stringify({ ID_Usuario: citaID }),
 	});
 
 	if (response.status !== 200) return null;
@@ -32,16 +33,16 @@ async function fetchUser(userID) {
 	return user;
 }
 
-async function updateUser(userID, userData, modifyUser) {
+async function updateUser(citaID, userData, modifyUser) {
 	var response = await fetch(api.url + "/usuario", {
 		method: "put",
 		headers: { "Content-Type": "application/json" },
-		body: JSON.stringify({ ID_Usuario: userID, ...userData }),
+		body: JSON.stringify({ ID_Usuario: citaID, ...userData }),
 	});
 
 	if (response.status !== 200) return false;
 
-	modifyUser({ ID_Usuario: userID, ...userData });
+	modifyUser({ ID_Usuario: citaID, ...userData });
 	return true;
 }
 
@@ -54,9 +55,9 @@ async function createUser(userData, addUser) {
 
 	if (response.status !== 200) return false;
 
-	var userID = await response.json();
-	userID = userID[0];
-	addUser({ ID_Usuario: userID, ...userData });
+	var citaID = await response.json();
+	citaID = citaID[0];
+	addUser({ ID_Usuario: citaID, ...userData });
 	return true;
 }
 
@@ -64,7 +65,7 @@ function validateData(data) {
 	return data ? data : "";
 }
 
-function ModalAdmin(props) {
+function ModalCita(props) {
 	const [state, setState] = React.useState({
 		open: true,
 		dimmer: "blurring",
@@ -78,7 +79,7 @@ function ModalAdmin(props) {
 
 	const [success, setSuccess] = React.useState(true);
 
-	const [stateUser, setStateUser] = useState({
+	const [stateCita, setStateUser] = useState({
 		nombre: "",
 		apellidos: "",
 		correo: "",
@@ -96,17 +97,17 @@ function ModalAdmin(props) {
 	}
 
 	function handleChange(event) {
-		setStateUser({ ...stateUser, [event.target.name]: event.target.value });
+		setStateUser({ ...stateCita, [event.target.name]: event.target.value });
 	}
 
 	function handleSelect(event, data) {
-		setStateUser({ ...stateUser, rol: data.value });
+		setStateUser({ ...stateCita, rol: data.value });
 	}
 
 	useEffect(() => {
-		if (!props.userID) return;
+		if (!props.citaID) return;
 		async function fetchData() {
-			const userData = await fetchUser(props.userID);
+			const userData = await fetchUser(props.citaID);
 			setStateUser({
 				nombre: validateData(userData.Nombre),
 				apellidos: validateData(userData.Apellidos),
@@ -125,6 +126,8 @@ function ModalAdmin(props) {
 		{ key: "Administrador", value: "Administrador", text: "Administrador" },
 	];
 
+	const [value, onChange] = useState(new Date());
+
 	function handleRestablecer() {
 		setStateUser({
 			nombre: "",
@@ -137,20 +140,6 @@ function ModalAdmin(props) {
 		});
 	}
 
-	function imageHandler(event) {
-		try {
-			const reader = new FileReader();
-			const foto = event.target.id;
-
-			reader.onload = () => {
-				if (reader.readyState === 2) {
-					setStateUser({ ...stateUser, [foto]: reader.result });
-				}
-			};
-			reader.readAsDataURL(event.target.files[0]);
-		} catch (error) {}
-	}
-
 	return (
 		<div>
 			<Modal
@@ -161,49 +150,44 @@ function ModalAdmin(props) {
 					setState({ open: false });
 				}}
 			>
-				<Modal.Header>{props.userID ? "Modificar Paciente" : "Registrar Paciente"}</Modal.Header>
+				<Modal.Header>{props.userID ? "Modificar Cita" : "Crear Cita"}</Modal.Header>
 				<Modal.Content image>
-					<FotoUsuarioModal
-						id="foto"
-						imageHandler={imageHandler}
-						foto={stateUser.foto}
-					/>
 					<Modal.Description className="descriptionRG">
-						<Header style={{ marginLeft: "10.5%" }}>
-							Datos de Paciente
+						<Header>
+							Datos de Cita
 						</Header>
-						<div className="containerUserRG">
+						<div className="containerCita">
 							<div className="blockModal">
 								<div className="block1RG">
 									<Input
-										style={{
-											width: "100%",
-											height: "100%",
-										}}
 										autoComplete="off"
 										size="large"
+										style={{ width: "100%" }}
 										icon="address card"
 										iconPosition="left"
-										placeholder="Nombre(s)"
+										placeholder="Nombre de la cita"
 										name="nombre"
 										onChange={handleChange}
-										value={stateUser.nombre}
+										value={stateCita.nombre}
 									/>
 								</div>
 								<div className="block2RG">
-									<Input
+									<Dropdown
 										style={{
 											width: "100%",
-											height: "100%",
 										}}
-										autoComplete="off"
-										size="large"
-										icon="address book"
-										iconPosition="left"
-										placeholder="Apellido(s)"
-										name="apellidos"
-										onChange={handleChange}
-										value={stateUser.apellidos}
+										button
+										name="rol"
+										selection
+										fluid
+										search
+										className="icon selectRol"
+										labeled
+										icon="group"
+										options={rolesOptions}
+										placeholder="Paciente"
+										onChange={handleSelect}
+										value={stateCita.rol}
 									/>
 								</div>
 							</div>
@@ -211,107 +195,38 @@ function ModalAdmin(props) {
 							<div className="blockModal">
 								<div className="block1RG">
 									<Input
-										style={{
-											width: "100%",
-											height: "100%",
-										}}
 										autoComplete="off"
+										style={{ width: "100%" }}
 										size="large"
-										icon="envelope"
+										icon="medkit"
 										iconPosition="left"
-										placeholder="Correo"
+										placeholder="Motivo"
 										name="correo"
 										onChange={handleChange}
-										value={stateUser.correo}
+										value={stateCita.correo}
 									/>
 								</div>
-								<div className="block2RG">
-									<Input
-										style={{
-											width: "100%",
-											height: "100%",
-										}}
-										autoComplete="off"
-										size="large"
-										icon="call"
-										iconPosition="left"
-										placeholder="Celular"
-										name="telefono"
-										onChange={handleChange}
-										value={stateUser.telefono}
-									/>
+								<div className="block2RG horarioPicker">
+									<i
+										aria-hidden="true"
+										class="calendar icon"
+									></i>
+									<Datetime initialValue="Horario"/>
 								</div>
 							</div>
 
 							<div className="blockModal">
-								<div className="block1RG">
-									<Dropdown
-										style={{
-											width: "100%",
-											height: "100%",
-										}}
-										button
-										name="rol"
-										selection
-										className="icon selectRol"
-										labeled
-										icon="group"
-										options={rolesOptions}
-										placeholder="Sexo"
-										onChange={handleSelect}
-										value={stateUser.rol}
-									/>
-								</div>
-								<div className="block2RG">
-									<Dropdown
-										style={{
-											width: "100%",
-											height: "100%",
-										}}
-										button
-										name="rol"
-										selection
-										className="icon selectRol"
-										labeled
-										icon="group"
-										options={rolesOptions}
-										placeholder="Estado Civil"
-										onChange={handleSelect}
-										value={stateUser.rol}
-									/>
-								</div>
-							</div>
-							<div className="blockModal">
-								<div className="block1RG">
+								<div className="taCita">
 									<Input
-										style={{
-											width: "100%",
-											height: "100%",
-										}}
+										style={{ width: "100%" }}
 										autoComplete="off"
 										size="large"
-										icon="address card"
+										icon="comment"
 										iconPosition="left"
-										placeholder="Fecha nacimiento"
-										name="nombre"
+										placeholder="Comentarios"
+										name="contrasena"
 										onChange={handleChange}
-										value={stateUser.nombre}
-									/>
-								</div>
-								<div className="block2RG">
-									<Input
-										style={{
-											width: "100%",
-											height: "100%",
-										}}
-										autoComplete="off"
-										size="large"
-										icon="address book"
-										iconPosition="left"
-										placeholder="Edad"
-										name="apellidos"
-										onChange={handleChange}
-										value={stateUser.apellidos}
+										value={stateCita.contrasena}
 									/>
 								</div>
 							</div>
@@ -344,24 +259,24 @@ function ModalAdmin(props) {
 						inverted
 						onClick={async () => {
 							if (
-								stateUser.nombre &&
-								stateUser.apellidos &&
-								stateUser.correo &&
-								stateUser.telefono &&
-								stateUser.rol &&
-								stateUser.contrasena
+								stateCita.nombre &&
+								stateCita.apellidos &&
+								stateCita.correo &&
+								stateCita.telefono &&
+								stateCita.rol &&
+								stateCita.contrasena
 							) {
-								if (!validateEmail(stateUser.correo)) {
+								if (!validateEmail(stateCita.correo)) {
 									setMessage(
 										"El correo ingresado no es correcto"
 									);
 									setSuccess(false);
 								} else {
 									var success;
-									if (props.userID) {
+									if (props.citaID) {
 										success = await updateUser(
-											props.userID,
-											stateUser,
+											props.citaID,
+											stateCita,
 											props.modifyUser
 										);
 										setSuccess(success);
@@ -376,7 +291,7 @@ function ModalAdmin(props) {
 										}
 									} else {
 										success = await createUser(
-											stateUser,
+											stateCita,
 											props.addUser
 										);
 										setSuccess(success);
@@ -405,7 +320,7 @@ function ModalAdmin(props) {
 						}}
 					>
 						<Icon name="checkmark" />{" "}
-						{props.userID ? "Guardar" : "Registrar"}
+						{props.citaID ? "Guardar" : "Registrar"}
 					</Button>
 				</Modal.Actions>
 				<Modal
@@ -443,4 +358,4 @@ function ModalAdmin(props) {
 	);
 }
 
-export default ModalAdmin;
+export default ModalCita;

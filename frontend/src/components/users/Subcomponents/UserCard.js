@@ -57,7 +57,7 @@ export default function UserCard(props) {
                 </div>
             </div>
 
-            <p className="user-role"> {validateData(props.user.Rol)} </p>
+            <p className="user-role"> {validateData(props.user.Sexo)} </p>
         </div>
     );
 }
