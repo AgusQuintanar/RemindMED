@@ -25,7 +25,13 @@ async function fetchCita(citaID) {
 	if (response.status !== 200) return null;
 	var cita = await response.json();
 
-	console.log("citaaaaa", cita.horario);
+    let date = null;
+    try {
+		date = new Date(cita.horario._seconds * 1000);
+	} catch(e) {}
+
+
+	cita.horario = date || new Date(cita.horario);
 
 	return cita;
 }

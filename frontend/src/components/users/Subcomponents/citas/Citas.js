@@ -44,12 +44,20 @@ async function fetchCita(citaID) {
 }
 
 function generateEvent(cita) {
+	let date = null;
+	try {
+		date = new Date(cita.horario._seconds * 1000);
+	} catch(e) {}
+
+
 	const generatedEvent = {
 		title: cita.nombre,
-		start: new Date(cita.horario),
-		end: addMinutes(new Date(cita.horario), 30),
+		start: date || new Date(cita.horario),
+		end: addMinutes(date || new Date(cita.horario), 30),
 		id: cita.id,
 	};
+
+	console.log(generatedEvent);
 	return generatedEvent;
 }
 

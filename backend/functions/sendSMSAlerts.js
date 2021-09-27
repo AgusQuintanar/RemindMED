@@ -125,8 +125,8 @@ async function getNearAppointments(gap) {
 	try {
 		const nearAppointments = firestore
 			.collection("Appointments")
-			.where("horario", ">", addMinutes(new Date(), gap-1))
-			.where("horario", "<", addMinutes(new Date(), gap));
+			.where("horario", ">=", addMinutes(new Date(), gap-2))
+			.where("horario", "<=", addMinutes(new Date(), gap));
 
 		const data = await nearAppointments.get();
 
