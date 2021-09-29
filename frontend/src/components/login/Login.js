@@ -5,7 +5,6 @@ import "./styles/Login.css";
 import AlertTitle from "@material-ui/lab/AlertTitle";
 import Collapse from "@material-ui/core/Collapse";
 import Alert from "@material-ui/lab/Alert";
-import api from "../shared_components/APIConfig";
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 import { initializeApp } from 'firebase/app';
 
@@ -226,11 +225,6 @@ function Login(props) {
 														handleClick();
 													})
 													.catch((error) => {
-														const errorCode =
-															error.code;
-														const errorMessage =
-															error.message;
-
 														setAlertState({
 															...alertState,
 															openError: true,
@@ -245,9 +239,9 @@ function Login(props) {
 							<div className="footer-link padding-top--24">
 								<span className="goToSignUp">
 									No tiene una cuenta?{" "}
-									<a onClick={() => goToSignUp()}>
+									<span href="#" onClick={() => goToSignUp()}>
 										Reqistrate
-									</a>
+									</span>
 								</span>
 
 								{/* <div className="reset-pass">

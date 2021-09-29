@@ -310,9 +310,9 @@ function SignUp(props) {
 							<div className="footer-link padding-top--24">
 								<span className="goToSignUp">
 									Ya tiene una cuenta?{" "}
-									<a onClick={() => goToSignIn()}>
+									<span onClick={() => goToSignIn()}>
 										Inicie sesión
-									</a>
+									</span>
 								</span>
 
 								{/* <div className="reset-pass">

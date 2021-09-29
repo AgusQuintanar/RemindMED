@@ -14,7 +14,6 @@ import "./Styles/ModalCita.css";
 import api from "../../../shared_components/APIConfig";
 import "../../../shared_components/Styles/Boton.css";
 import Datetime from "react-datetime";
-import { deleteUser } from "@firebase/auth";
 
 async function fetchCita(citaID) {
 	var response = await fetch(api.url + "/getCita?id=" + citaID, {

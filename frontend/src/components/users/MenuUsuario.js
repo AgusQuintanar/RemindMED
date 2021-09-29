@@ -1,21 +1,19 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useHistory } from "react-router-dom";
 import "./Styles/MenuUsuario.css";
 import { withRouter } from "react-router-dom";
 import Pacientes from "./Subcomponents/Pacientes";
-import api from "../shared_components/APIConfig";
 import Citas from "./Subcomponents/citas/Citas";
 
-
 function MenuUsuario(props) {
-	const [state, setState] = useState({
-		nombre: "",
-		apellidos: "",
-		correo: "",
-		telefono: "",
-		rol: "",
-		foto: null,
-	});
+	// const [state, setState] = useState({
+	// 	nombre: "",
+	// 	apellidos: "",
+	// 	correo: "",
+	// 	telefono: "",
+	// 	rol: "",
+	// 	foto: null,
+	// });
 
 	const [borderState, setBorderState] = useState({
 		btnPacientes: "3px solid #00acee",
@@ -34,7 +32,6 @@ function MenuUsuario(props) {
 		window.location.reload();
 		history.push("/");
 	}
-
 
 	function handleClick(name) {
 		setBorderState({ [name]: "3px solid #00acee" });
@@ -72,7 +69,7 @@ function MenuUsuario(props) {
 					</div>
 				</div>
 
-                <div
+				<div
 					className="sideBarBlock"
 					onClick={() => {
 						handleClick("btnCitas");
@@ -119,10 +116,10 @@ function MenuUsuario(props) {
 			</div>
 			<div className="dataUsuario">
 				{foregroundState.btnPacientes && (
-					<Pacientes ID_Usuario={props.ID_Usuario} state={state} />
+					<Pacientes ID_Usuario={props.ID_Usuario} />
 				)}
-                {foregroundState.btnCitas && (
-					<Citas ID_Usuario={props.ID_Usuario} state={state} />
+				{foregroundState.btnCitas && (
+					<Citas ID_Usuario={props.ID_Usuario} />
 				)}
 			</div>
 		</div>

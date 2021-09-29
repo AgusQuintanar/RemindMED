@@ -43,12 +43,18 @@ async function fetchCita(citaID) {
 	return events;
 }
 
+function isValidDate(d) {
+	return d instanceof Date && !isNaN(d);
+}
+
 function generateEvent(cita) {
 	let date = null;
 	try {
 		date = new Date(cita.horario._seconds * 1000);
-	} catch(e) {}
+	} catch(e) {
+	}
 
+	if (!isValidDate(date)) date = null;
 
 	const generatedEvent = {
 		title: cita.nombre,
@@ -57,7 +63,7 @@ function generateEvent(cita) {
 		id: cita.id,
 	};
 
-	console.log(generatedEvent);
+	console.log("evento crado", generatedEvent);
 	return generatedEvent;
 }
 
@@ -67,17 +73,17 @@ function Citas(props) {
 	const [citaID, setCitaID] = useState("");
 
 	const [open, setOpen] = useState(false);
-	const [open2, setOpen2] = useState(false);
-	const [open3, setOpen3] = useState(false);
 
 	function addCita(newCita) {
 		setCitas([generateEvent(newCita), ...citas]);
 	}
 
 	function modifyCita(newCita) {
+		console.log("nueva citaaaaa", newCita);
 		setCitas((citas) =>
 			citas.map((cita) => {
 				if (cita.id === newCita.id) {
+					console.log("si entro", cita, newCita, generateEvent(newCita));
 					return generateEvent(newCita);
 				} else {
 					return cita;
@@ -98,21 +104,6 @@ function Citas(props) {
 		setOpen(true);
 	}
 
-	function closeModal2() {
-		setOpen2(false);
-	}
-
-	function openModal2() {
-		setOpen2(true);
-	}
-
-	function closeModal3() {
-		setOpen3(false);
-	}
-
-	function openModal3() {
-		setOpen3(true);
-	}
 
 	function changeCitaID(id) {
 		setCitaID(id);
